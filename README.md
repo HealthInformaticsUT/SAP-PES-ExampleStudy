@@ -9,11 +9,11 @@ install.packages(c("remotes", "CDMConnector", "CirceR", "SqlRender",
                    "dplyr", "dbplyr", "jsonlite", "survival", "zip"))
 
 remotes::install_github(
-  "HealthInformaticsUT/Cohort2Trajectory@b8ced8c4666177d4011d7bce790624c56baf040e",
+  "HealthInformaticsUT/Cohort2Trajectory@fa1c74958df68383f4204934db97912c6edaecda",
   upgrade = "never"
 )
 remotes::install_github(
-  "HealthInformaticsUT/TrajectoryMarkovAnalysis@4555daeece14ecbbfcabf953bd8928364c474a50",
+  "HealthInformaticsUT/TrajectoryMarkovAnalysis@6d4832456391d7d7b137b3b401e22f0906a8273d",
   upgrade = "never"
 )
 ```
