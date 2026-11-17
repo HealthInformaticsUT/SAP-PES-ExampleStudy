@@ -1,5 +1,7 @@
 # SAP and PES example study
 
+This study uses Cohort2Trajectory and TrajectoryMarkovAnalysis to examine stroke-associated pneumonia (SAP) and an economic scenario for pharyngeal electrical stimulation (PES).
+
 Use R 4.1 or later, Java 8 or later for CirceR and SqlRender, and the C++ build tools for your R installation. Install the tested package revisions once:
 
 ```r
