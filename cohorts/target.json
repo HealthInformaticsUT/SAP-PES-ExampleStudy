@@ -1,0 +1,358 @@
+{
+  "ConceptSets": [
+    {
+      "id": 0,
+      "name": "Cerebral Infraction",
+      "expression": {
+        "items": [
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "ICD10 Hierarchy",
+              "CONCEPT_CODE": "I63",
+              "CONCEPT_ID": 45543186,
+              "CONCEPT_NAME": "Cerebral infarction",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "N",
+              "STANDARD_CONCEPT_CAPTION": "Non-Standard",
+              "VOCABULARY_ID": "ICD10"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "ICD10 code",
+              "CONCEPT_CODE": "I63.6",
+              "CONCEPT_ID": 45548031,
+              "CONCEPT_NAME": "Cerebral infarction due to cerebral venous thrombosis, nonpyogenic",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "N",
+              "STANDARD_CONCEPT_CAPTION": "Non-Standard",
+              "VOCABULARY_ID": "ICD10"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "ICD10 code",
+              "CONCEPT_CODE": "I63.4",
+              "CONCEPT_ID": 45591475,
+              "CONCEPT_NAME": "Cerebral infarction due to embolism of cerebral arteries",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "N",
+              "STANDARD_CONCEPT_CAPTION": "Non-Standard",
+              "VOCABULARY_ID": "ICD10"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "ICD10 code",
+              "CONCEPT_CODE": "I63.1",
+              "CONCEPT_ID": 45557550,
+              "CONCEPT_NAME": "Cerebral infarction due to embolism of precerebral arteries",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "N",
+              "STANDARD_CONCEPT_CAPTION": "Non-Standard",
+              "VOCABULARY_ID": "ICD10"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "ICD10 code",
+              "CONCEPT_CODE": "I63.3",
+              "CONCEPT_ID": 45562366,
+              "CONCEPT_NAME": "Cerebral infarction due to thrombosis of cerebral arteries",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "N",
+              "STANDARD_CONCEPT_CAPTION": "Non-Standard",
+              "VOCABULARY_ID": "ICD10"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "ICD10 code",
+              "CONCEPT_CODE": "I63.0",
+              "CONCEPT_ID": 45538393,
+              "CONCEPT_NAME": "Cerebral infarction due to thrombosis of precerebral arteries",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "N",
+              "STANDARD_CONCEPT_CAPTION": "Non-Standard",
+              "VOCABULARY_ID": "ICD10"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "ICD10 code",
+              "CONCEPT_CODE": "I63.5",
+              "CONCEPT_ID": 45605808,
+              "CONCEPT_NAME": "Cerebral infarction due to unspecified occlusion or stenosis of cerebral arteries",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "N",
+              "STANDARD_CONCEPT_CAPTION": "Non-Standard",
+              "VOCABULARY_ID": "ICD10"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "ICD10 code",
+              "CONCEPT_CODE": "I63.2",
+              "CONCEPT_ID": 45586592,
+              "CONCEPT_NAME": "Cerebral infarction due to unspecified occlusion or stenosis of precerebral arteries",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "N",
+              "STANDARD_CONCEPT_CAPTION": "Non-Standard",
+              "VOCABULARY_ID": "ICD10"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "ICD10 code",
+              "CONCEPT_CODE": "I63.9",
+              "CONCEPT_ID": 45596216,
+              "CONCEPT_NAME": "Cerebral infarction, unspecified",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "N",
+              "STANDARD_CONCEPT_CAPTION": "Non-Standard",
+              "VOCABULARY_ID": "ICD10"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "ICD10 code",
+              "CONCEPT_CODE": "I63.8",
+              "CONCEPT_ID": 45605810,
+              "CONCEPT_NAME": "Other cerebral infarction",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "N",
+              "STANDARD_CONCEPT_CAPTION": "Non-Standard",
+              "VOCABULARY_ID": "ICD10"
+            },
+            "includeDescendants": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 1,
+      "name": "Cerebral infraction standard",
+      "expression": {
+        "items": [
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Disorder",
+              "CONCEPT_CODE": "432504007",
+              "CONCEPT_ID": 443454,
+              "CONCEPT_NAME": "Cerebral infarction",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 2,
+      "name": "Dysphagia",
+      "expression": {
+        "items": [
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Disorder",
+              "CONCEPT_CODE": "40739000",
+              "CONCEPT_ID": 31317,
+              "CONCEPT_NAME": "Dysphagia",
+              "DOMAIN_ID": "Condition",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "SNOMED"
+            },
+            "includeDescendants": true
+          }
+        ]
+      }
+    },
+    {
+      "id": 3,
+      "name": "Inpatient",
+      "expression": {
+        "items": [
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Visit",
+              "CONCEPT_CODE": "ERIP",
+              "CONCEPT_ID": 262,
+              "CONCEPT_NAME": "Emergency Room and Inpatient Visit",
+              "DOMAIN_ID": "Visit",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "Visit"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Visit",
+              "CONCEPT_CODE": "IP",
+              "CONCEPT_ID": 9201,
+              "CONCEPT_NAME": "Inpatient Visit",
+              "DOMAIN_ID": "Visit",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "Visit"
+            },
+            "includeDescendants": true
+          },
+          {
+            "concept": {
+              "CONCEPT_CLASS_ID": "Visit",
+              "CONCEPT_CODE": "ER",
+              "CONCEPT_ID": 9203,
+              "CONCEPT_NAME": "Emergency Room Visit",
+              "DOMAIN_ID": "Visit",
+              "INVALID_REASON": "V",
+              "INVALID_REASON_CAPTION": "Valid",
+              "STANDARD_CONCEPT": "S",
+              "STANDARD_CONCEPT_CAPTION": "Standard",
+              "VOCABULARY_ID": "Visit"
+            },
+            "includeDescendants": true
+          }
+        ]
+      }
+    }
+  ],
+  "PrimaryCriteria": {
+    "CriteriaList": [
+      {
+        "VisitOccurrence": {
+          "CorrelatedCriteria": {
+            "Type": "ALL",
+            "CriteriaList": [
+              {
+                "Criteria": {
+                  "ConditionOccurrence": {
+                    "ConditionSourceConcept": 0
+                  }
+                },
+                "StartWindow": {
+                  "Start": {
+                    "Coeff": -1
+                  },
+                  "End": {
+                    "Coeff": 1
+                  },
+                  "UseEventEnd": false
+                },
+                "RestrictVisit": true,
+                "Occurrence": {
+                  "Type": 2,
+                  "Count": 1
+                }
+              }
+            ],
+            "DemographicCriteriaList": [],
+            "Groups": []
+          },
+          "CodesetId": 3
+        }
+      }
+    ],
+    "ObservationWindow": {
+      "PriorDays": 1095,
+      "PostDays": 0
+    },
+    "PrimaryCriteriaLimit": {
+      "Type": "First"
+    }
+  },
+  "AdditionalCriteria": {
+    "Type": "ALL",
+    "CriteriaList": [],
+    "DemographicCriteriaList": [],
+    "Groups": []
+  },
+  "QualifiedLimit": {
+    "Type": "First"
+  },
+  "ExpressionLimit": {
+    "Type": "First"
+  },
+  "InclusionRules": [
+    {
+      "name": "no infraction before",
+      "expression": {
+        "Type": "AT_MOST",
+        "Count": 0,
+        "CriteriaList": [
+          {
+            "Criteria": {
+              "ConditionOccurrence": {
+                "ConditionSourceConcept": 0
+              }
+            },
+            "StartWindow": {
+              "Start": {
+                "Coeff": -1
+              },
+              "End": {
+                "Days": 1,
+                "Coeff": -1
+              },
+              "UseEventEnd": false
+            },
+            "Occurrence": {
+              "Type": 2,
+              "Count": 1
+            }
+          }
+        ],
+        "DemographicCriteriaList": [],
+        "Groups": []
+      }
+    }
+  ],
+  "CensoringCriteria": [],
+  "CollapseSettings": {
+    "CollapseType": "ERA",
+    "EraPad": 0
+  },
+  "CensorWindow": {},
+  "cdmVersionRange": ">=5.0.0"
+}

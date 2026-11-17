@@ -1,0 +1,18 @@
+source_concept_id,source_concept_name,sensitivity_group,primary_model_included,interpretation
+31317,Dysphagia,broad_marker_positive,TRUE,direct dysphagia diagnosis
+435642,Disturbance in speech,broad_marker_positive,FALSE,nonspecific neurologic communication marker
+604177,Flexible bronchoscopy,broad_marker_positive,FALSE,airway procedure marker
+763457,Nutrition counseling,broad_marker_positive,FALSE,nutrition-care marker
+1073322,Construction of tracheostomy,broad_marker_positive,FALSE,airway-support marker
+4032404,Bronchoscopy,broad_marker_positive,FALSE,airway procedure marker
+4042005,Enteral feeding,broad_marker_positive,FALSE,feeding-support marker
+4121247,Exploration of stomach,broad_marker_positive,FALSE,nonspecific gastrointestinal procedure marker
+4122234,Percutaneous endoscopic gastrostomy,broad_marker_positive,FALSE,long-term feeding-support marker
+4123569,Insertion of nasoduodenal or nasogastric tube,broad_marker_positive,FALSE,feeding-support marker
+4176717,Flexible fiberoptic laryngoscopy,broad_marker_positive,FALSE,upper-airway assessment marker
+4201412,Speech therapy,broad_marker_positive,FALSE,speech or swallowing-care marker
+4227418,Insertion of nasogastric tube,broad_marker_positive,FALSE,feeding-support marker
+4262010,Tracheostomy care management,broad_marker_positive,FALSE,airway-support marker
+4294382,Esophagogastroduodenoscopy,broad_marker_positive,FALSE,nonspecific gastrointestinal procedure marker
+4301600,Direct or flexible fiberoptic laryngoscopy,broad_marker_positive,FALSE,upper-airway assessment marker
+44788943,Speech assessment,broad_marker_positive,FALSE,speech or swallowing assessment marker

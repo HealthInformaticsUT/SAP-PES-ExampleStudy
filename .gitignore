@@ -1,0 +1,23 @@
+# Local patient data and generated results
+/nihss*.csv
+/NIHSS*.csv
+/results/
+/private/
+*.rds
+*.RDS
+
+# Database connection setup and secrets
+/connection*.R
+/connect*.R
+/credentials*
+.env
+.env.*
+.Renviron
+.Rprofile
+
+# Local R and editor files
+.Rhistory
+.RData
+.Ruserdata
+.Rproj.user/
+.DS_Store

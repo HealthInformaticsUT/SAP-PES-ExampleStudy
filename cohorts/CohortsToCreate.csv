@@ -1,0 +1,5 @@
+cohortId,cohortName,jsonPath
+1,primary_stroke_target,target.json
+2,episode_dysphagia,dysphagia.json
+3,pneumonia_history,pneumonia_history.json
+4,recorded_death,death.json
