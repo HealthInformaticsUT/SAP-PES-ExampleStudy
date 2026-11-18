@@ -59,19 +59,19 @@ summarise_economic_outcomes <- function(projection, config, horizon_years,
   summaries <- arm_totals <- list()
   for (arm_name in c("standard", "intervention")) {
     arm <- projection$arms[[arm_name]]
-    rewards <- arm$rewards
-    rewards$costDiscountRate <- rewards$healthDiscountRate <- discount_rate
-    rewards$upfrontCosts <- c(program = if (arm_name == "intervention") cost_per_patient else 0)
+    rewards <- TrajectoryMarkovAnalysis::updateRewardModel(
+      arm$rewards, costDiscountRate = discount_rate, healthDiscountRate = discount_rate,
+      upfrontCosts = c(program = if (arm_name == "intervention") cost_per_patient else 0))
     summary <- TrajectoryMarkovAnalysis::summariseOutcomes(arm$projection, rewards,
       nCycles = min(requested_cycles, nrow(arm$by_cycle)))
     summaries[[arm_name]] <- summary
-    totals <- stats::setNames(summary$totals$total, summary$totals$metric)
+    totals <- TrajectoryMarkovAnalysis::outcomeTotals(summary)
     cycles <- arm$by_cycle[arm$by_cycle$cycle < requested_cycles, , drop = FALSE]
-    care_cost <- unname(totals["discounted_cost"])
+    care_cost <- totals[["cost"]]
     if (arm_name == "intervention") care_cost <- care_cost - program_cost
     arm_totals[[arm_name]] <- list(
-      cost = care_cost, life_years = unname(totals["discounted_life_years"]),
-      qalys = unname(totals["discounted_qalys"]),
+      cost = care_cost, life_years = totals[["life_years"]],
+      qalys = totals[["qalys"]],
       pneumonia = sum(cycles$pneumonia_onsets), deaths = sum(cycles$deaths),
       remaining_alive = tail(cycles$alive_end, 1L), cycles_run = nrow(cycles))
   }

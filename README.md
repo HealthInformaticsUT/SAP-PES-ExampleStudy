@@ -2,23 +2,23 @@
 
 This study uses Cohort2Trajectory and TrajectoryMarkovAnalysis to examine stroke-associated pneumonia (SAP) and an economic scenario for pharyngeal electrical stimulation (PES).
 
-Use R 4.1 or later, Java 8 or later for CirceR and SqlRender, and the C++ build tools for your R installation. Install the tested package revisions once:
+Use R 4.1 or later, Java 8 or later for CirceR and SqlRender, and the C++ build tools for your R installation. Install the tested package revisions before running the study:
 
 ```r
 install.packages(c("remotes", "CDMConnector", "CirceR", "SqlRender",
                    "dplyr", "dbplyr", "jsonlite", "survival", "zip"))
 
 remotes::install_github(
-  "HealthInformaticsUT/Cohort2Trajectory@fa1c74958df68383f4204934db97912c6edaecda",
+  "HealthInformaticsUT/Cohort2Trajectory@30523a57ff5e7c67eba3883c375c5d1f921c4201",
   upgrade = "never"
 )
 remotes::install_github(
-  "HealthInformaticsUT/TrajectoryMarkovAnalysis@6d4832456391d7d7b137b3b401e22f0906a8273d",
+  "HealthInformaticsUT/TrajectoryMarkovAnalysis@b24836f5ece7b88da09e7326040f3f36700db2a1",
   upgrade = "never"
 )
 ```
 
-These revisions provide Cohort2Trajectory 1.3.0 and TrajectoryMarkovAnalysis 1.1.0. The fixed revisions keep the study installation reproducible as the packages develop.
+These commits provide Cohort2Trajectory 1.3.0.9000 and TrajectoryMarkovAnalysis 1.1.0.9000, including the shared trajectory definitions and economic helpers used here. The installation commands pin both packages so later repository changes do not alter the code used for this study. Restart R after updating packages that were already loaded.
 
 Connect to your OMOP database in R so that `cdm` is available with a writable results schema. Keep database credentials in your own connection setup, then run:
 
@@ -52,6 +52,8 @@ To follow the analysis, start with `R/run.R`. It reads in the same order as the 
 | `R/survival.R` | Fits the Cox models and optional NIHSS analyses. |
 | `R/economics.R` | Calculates costs, QALYs, ICERs and economic sensitivities. |
 | `R/export.R` | Applies disclosure rules and writes tables and figure data. |
+
+C2T defines the clinical states and absorbing states once in `R/data.R`, using the seven-day cycle length from `assumptions.R`. The returned trajectories carry those definitions into TMA preparation and stage estimation. The onset-before-mortality order remains an explicit study rule. The primary projection defines weekly charges and utilities beside the transition model, using the same states and periods. `summarise_economic_outcomes()` then sets the programme cost and discount rates for each scenario through `updateRewardModel()`. `outcomeTotals()` reads discounted costs, life-years and QALYs without accessing the result object's internal tables.
 
 `assumptions.R` holds the fixed model settings. `cohorts/` and `inputs/` hold the definitions and external inputs. There are no recovery scripts or developer tests. A failed run is restarted from the beginning.
 

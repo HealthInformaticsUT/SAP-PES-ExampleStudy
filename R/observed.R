@@ -78,7 +78,7 @@ summarise_followup <- function(c2t, patients, histories) {
   do.call(rbind, rows)
 }
 
-summarise_transitions <- function(cycles, patients, config) {
+summarise_transitions <- function(cycles, patients, config, histories) {
   groups <- cohort_groups(patients)
   stages <- c("Pneumonia onset", "Mortality without pneumonia", "Mortality after pneumonia")
   rows <- list()
@@ -94,7 +94,7 @@ summarise_transitions <- function(cycles, patients, config) {
         source_patients = 0, probability = NA_real_, .support_n = 0)
       next
     }
-    estimates <- estimate_transitions(group_cycles, config)$estimates
+    estimates <- estimate_transitions(group_cycles, config, histories)$estimates
     onset <- estimates$stage == "onset" & estimates$from_state == "AliveNoPneum" &
       estimates$to_state == "AlivePneum"
     death_without_pneumonia <- estimates$stage == "mortality" &
@@ -364,11 +364,9 @@ summarise_observed_care <- function(c2t, patients, config, primary_result = NULL
                 "age", "gender_concept_id", "eligible")
   if (!all(required %in% names(patients)) || anyNA(patients$eligible) || anyDuplicated(patients$subject_id))
     stop("Observed reports need one valid baseline row per target patient and an eligibility flag.")
-  histories <- TrajectoryMarkovAnalysis::prepareTrajectories(c2t$trajectories, cycleLength = 7L,
-    states = c("AliveNoPneum", "AlivePneum", "DeathNoHistory", "DeathHistory"),
-    absorbingStates = c("DeathNoHistory", "DeathHistory"))
+  histories <- TrajectoryMarkovAnalysis::prepareTrajectories(c2t$trajectories)
   cycles <- build_weekly_analysis_rows(patients, histories, config)
-  transitions <- summarise_transitions(cycles, patients, config)
+  transitions <- summarise_transitions(cycles, patients, config, histories)
   validation <- validate_survival(patients, transitions, config, validation_replicates, seed)
   tables <- list(demographics = summarise_demographics(patients),
     observed_population = summarise_followup(c2t, patients, histories),

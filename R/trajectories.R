@@ -44,19 +44,17 @@ stage_observations <- function(cycles, stages = c("onset", "mortality")) {
   do.call(rbind, rows)
 }
 
-estimate_transitions <- function(cycles, config, stages = c("onset", "mortality"),
-                               observations = NULL) {
+estimate_transitions <- function(cycles, config, histories, stages = c("onset", "mortality"),
+                                 observations = NULL) {
   if (is.null(observations)) observations <- stage_observations(cycles, stages)
   TrajectoryMarkovAnalysis::estimateStageTransitions(observations,
-    stageOrder = stages, cycleLength = config$economic$cycle_days,
-    states = c("AliveNoPneum", "AlivePneum", "DeathNoHistory", "DeathHistory"),
-    absorbingStates = c("DeathNoHistory", "DeathHistory"),
+    stageOrder = stages, definition = histories,
     identityStates = if ("onset" %in% stages) list(onset = "AlivePneum") else list(),
     periodBreaks = config$period_breaks, periodLabels = config$period_labels)
 }
 
-estimate_pneumonia_onset <- function(cycles, config) {
-  estimated <- estimate_transitions(cycles, config, stages = "onset")$estimates
+estimate_pneumonia_onset <- function(cycles, config, histories) {
+  estimated <- estimate_transitions(cycles, config, histories, stages = "onset")$estimates
   onset <- estimated[estimated$stage == "onset" & estimated$from_state == "AliveNoPneum" &
     estimated$to_state == "AlivePneum" & estimated$denominator > 0 &
     estimated$period != tail(config$period_labels, 1L), , drop = FALSE]
@@ -77,7 +75,7 @@ estimate_pneumonia_onset <- function(cycles, config) {
 # The primary thesis uses a shared background-mortality schedule for the
 # eligible cohort, plus a state- and period-specific excess hazard. This adapter
 # prepares those supplied probabilities. TMA performs the cohort propagation.
-estimate_mortality <- function(cycles, patients, life_table_file, config) {
+estimate_mortality <- function(cycles, patients, life_table_file, config, histories) {
   days <- config$economic$cycle_days
   year_days <- config$economic$days_per_year
   max_age <- config$mortality$max_age
@@ -125,7 +123,7 @@ estimate_mortality <- function(cycles, patients, life_table_file, config) {
   patient_row <- match(stage_rows$subject_id, patients$subject_id)
   stage_rows$background_age <- pmin(pmax(floor(patients$age[patient_row] + stage_rows$source_day / year_days), 0), max_age)
   stage_rows$sex <- patients$sex[patient_row]
-  fitted_stages <- estimate_transitions(cycles, config, stages = "mortality", observations = stage_rows)
+  fitted_stages <- estimate_transitions(cycles, config, histories, stages = "mortality", observations = stage_rows)
   background <- TrajectoryMarkovAnalysis::createModelBundle(
     TrajectoryMarkovAnalysis::createMortalityTransitions(
       data.frame(background_age = life_table$age, sex = life_table$sex,
@@ -292,6 +290,21 @@ project_standard_and_intervention <- function(schedule, eligible_n, config) {
     periodLabels = period_labels
   )
 
+  # Both arms share weekly charges and utilities. Programme fees are added
+  # when summarising each economic scenario.
+  # Charges are means per observed weekly row, including shortened final rows.
+  weekly_costs <- data.frame(
+    period = rep(period_labels, each = length(states)),
+    state = rep(states, n_cycles),
+    cost = as.vector(t(cbind(schedule$cost_no_pneumonia, schedule$cost_pneumonia, 0, 0))))
+  base_rewards <- TrajectoryMarkovAnalysis::createRewardModel(
+    stateCosts = weekly_costs, upfrontCosts = c(program = 0),
+    aliveStates = living, utilities = stats::setNames(c(rep(economic$utility, 2), 0, 0), states),
+    costTiming = "pneumonia_onset", healthTiming = "start", discountTiming = "midpoint",
+    costDiscountRate = economic$discount_rate, healthDiscountRate = economic$discount_rate,
+    daysPerYear = economic$days_per_year, currency = "EUR", priceYear = config$cost$price_year,
+    periodBreaks = period_breaks, periodLabels = period_labels)
+
   sum_by_cycle <- function(values, source_cycles) {
     result <- numeric(n_cycles)
     if (length(values)) {
@@ -300,7 +313,7 @@ project_standard_and_intervention <- function(schedule, eligible_n, config) {
     }
     result
   }
-  project_arm <- function(reduction, startup_cost) {
+  project_arm <- function(reduction) {
     projection <- TrajectoryMarkovAnalysis::projectCohort(
       transitions = model, nCycles = n_cycles,
       initial = c(AliveNoPneum = 1), cohortSize = eligible_n,
@@ -321,7 +334,6 @@ project_standard_and_intervention <- function(schedule, eligible_n, config) {
     alive <- occupancy$state %in% living
     alive_counts <- rowsum(occupancy$expected_count[alive], occupancy$cycle[alive],
                           reorder = FALSE)[as.character(0:n_cycles), 1L]
-    rewards <- define_rewards(schedule, config, startup_cost / eligible_n)
     by_cycle <- data.frame(
       cycle = cycles,
       alive_end = unname(alive_counts[seq_len(n_cycles) + 1L]),
@@ -334,34 +346,16 @@ project_standard_and_intervention <- function(schedule, eligible_n, config) {
       if (length(reached)) cycles_run <- reached[1L]
     }
     by_cycle <- by_cycle[seq_len(cycles_run), , drop = FALSE]
-    list(projection = projection, by_cycle = by_cycle, rewards = rewards)
+    list(projection = projection, by_cycle = by_cycle, rewards = base_rewards)
   }
   arms <- list(
-    standard = project_arm(0, 0),
-    intervention = project_arm(economic$reduction, eligible_n * economic$intervention_cost)
+    standard = project_arm(0),
+    intervention = project_arm(economic$reduction)
   )
   list(eligible_n = eligible_n, n_cycles = n_cycles, arms = arms)
 }
 
-# Explicit weekly rewards. The amounts are observed weekly means, including
-# shortened final rows, rather than daily means multiplied by seven.
-define_rewards <- function(schedule, config, upfront = 0) {
-  states <- c("AliveNoPneum", "AlivePneum", "DeathNoHistory", "DeathHistory")
-  periods <- paste0("source_cycle_", schedule$cycle)
-  rewards <- data.frame(period = rep(periods, each = 4L), state = rep(states, nrow(schedule)),
-    cost = as.vector(t(cbind(schedule$cost_no_pneumonia, schedule$cost_pneumonia, 0, 0))))
-  TrajectoryMarkovAnalysis::createRewardModel(
-    stateCosts = rewards, upfrontCosts = c(program = upfront),
-    aliveStates = states[1:2], utilities = stats::setNames(c(rep(config$economic$utility, 2), 0, 0), states),
-    costTiming = "pneumonia_onset", healthTiming = "start", discountTiming = "midpoint",
-    costDiscountRate = config$economic$discount_rate, healthDiscountRate = config$economic$discount_rate,
-    daysPerYear = config$economic$days_per_year, currency = "EUR", priceYear = config$cost$price_year,
-    periodBreaks = c(schedule$cycle * config$economic$cycle_days, Inf), periodLabels = periods)
-}
-
-
 estimate_model_inputs <- function(c2t, patients, config, cost_data) {
-  states <- c("AliveNoPneum", "AlivePneum", "DeathNoHistory", "DeathHistory")
   eligible <- patients[patients$eligible, , drop = FALSE]
   if (!nrow(eligible)) stop("No patients met the bundled dysphagia visit-interval definition.")
   counts <- data.frame(
@@ -371,16 +365,15 @@ estimate_model_inputs <- function(c2t, patients, config, cost_data) {
     eligible_same_day_pneumonia_deaths = sum(eligible$pneumonia_date == eligible$death_date, na.rm = TRUE)
   )
   selected <- c2t$trajectories[c2t$trajectories$subject_id %in% eligible$subject_id, , drop = FALSE]
-  histories <- TrajectoryMarkovAnalysis::prepareTrajectories(
-    selected, cycleLength = 7L, states = states, absorbingStates = states[3:4]
-  )
+  histories <- TrajectoryMarkovAnalysis::prepareTrajectories(selected)
+  states <- histories$states
   if (histories$diagnostics$gap_count || histories$diagnostics$unresolved_intervals ||
       length(histories$diagnostics$subjects_without_start) || length(histories$diagnostics$subjects_without_exit)) {
     stop("Resolve missing boundaries, gaps or unresolved intervals before the primary analysis.")
   }
   cycles <- build_weekly_analysis_rows(eligible, histories, config)
-  onset <- estimate_pneumonia_onset(cycles, config)
-  mortality <- estimate_mortality(cycles, eligible, config$mortality$life_table_file, config)
+  onset <- estimate_pneumonia_onset(cycles, config, histories)
+  mortality <- estimate_mortality(cycles, eligible, config$mortality$life_table_file, config, histories)
   costs <- estimate_weekly_costs(histories, config, cost_data)
   schedule <- dplyr::left_join(onset$schedule, mortality$schedule, by = "cycle")
   rewards <- costs$rewards

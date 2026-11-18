@@ -4,11 +4,14 @@ run_study <- function(cdm, nihss = NULL, config) {
                     "CirceR", "SqlRender", "dplyr", "dbplyr", "jsonlite", "survival", "zip")) {
     if (!requireNamespace(package, quietly = TRUE)) stop("Install ", package, " before running this study.")
   }
-  if (utils::packageVersion("Cohort2Trajectory") < "1.3.0" ||
-      utils::packageVersion("TrajectoryMarkovAnalysis") < "1.1.0") {
-    stop("This study requires Cohort2Trajectory >= 1.3.0 and TrajectoryMarkovAnalysis >= 1.1.0.")
+  if (utils::packageVersion("Cohort2Trajectory") < "1.3.0.9000" ||
+      utils::packageVersion("TrajectoryMarkovAnalysis") < "1.1.0.9000") {
+    stop("This study requires Cohort2Trajectory >= 1.3.0.9000 and TrajectoryMarkovAnalysis >= 1.1.0.9000.")
   }
   if (!inherits(cdm, "cdm_reference")) stop("Supply a connected CDMConnector cdm reference.")
+  if (!identical(as.numeric(config$economic$cycle_days), 7)) {
+    stop("This study's event rules and reporting periods require seven-day cycles.")
+  }
   nihss <- read_nihss(nihss)
 
   # C2T creates temporary patient files. They are deleted when this run ends.
@@ -19,7 +22,7 @@ run_study <- function(cdm, nihss = NULL, config) {
   message("1/6 Generating cohorts and weekly trajectories.")
   cohorts <- generate_study_cohorts(cdm, config, basename(work_dir))
   cdm <- cohorts$cdm
-  trajectories <- create_weekly_trajectories(cohorts$rows, work_dir)
+  trajectories <- create_weekly_trajectories(cohorts$rows, work_dir, config)
   patients <- add_baseline_information(cdm, get_patient_dates(trajectories), trajectories$eligibility_cohort)
   markers <- add_dysphagia_markers(cdm, patients, config)
   cox_inputs <- prepare_cox_inputs(cdm, markers$patients, nihss)
@@ -29,10 +32,7 @@ run_study <- function(cdm, nihss = NULL, config) {
   message("2/6 Estimating transitions and costs.")
   cost_patients <- patients$subject_id[patients$eligible | patients$broad_eligible]
   cost_histories <- TrajectoryMarkovAnalysis::prepareTrajectories(
-    trajectories$trajectories[trajectories$trajectories$subject_id %in% cost_patients, ],
-    cycleLength = 7L,
-    states = c("AliveNoPneum", "AlivePneum", "DeathNoHistory", "DeathHistory"),
-    absorbingStates = c("DeathNoHistory", "DeathHistory"))
+    trajectories$trajectories[trajectories$trajectories$subject_id %in% cost_patients, ])
   cost_records <- TrajectoryMarkovAnalysis::extractCosts(cdm, trajectories = cost_histories,
     measure = "total_charge", domains = "Visit Detail", allocation = "duration")
   cost_records$subject_id <- as.character(cost_records$subject_id)
@@ -53,7 +53,7 @@ run_study <- function(cdm, nihss = NULL, config) {
     directory <- file.path(work_dir, scenario)
     dir.create(directory)
     scenario_cohorts <- cohort_rows_from_patients(scenario_patients)
-    scenario_trajectories <- create_weekly_trajectories(scenario_cohorts, directory)
+    scenario_trajectories <- create_weekly_trajectories(scenario_cohorts, directory, config)
     eligible_ids <- scenario_patients$subject_id[scenario_patients$eligible]
     scenario_costs <- cost_records[cost_records$subject_id %in% eligible_ids, ]
     scenario_result <- estimate_model_inputs(scenario_trajectories, scenario_patients, config, scenario_costs)

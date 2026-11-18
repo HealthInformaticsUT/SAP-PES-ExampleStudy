@@ -143,7 +143,7 @@ define_state_intervals <- function(cohort_rows) {
   list(intervals = intervals, eligibility = eligibility, patients = patients)
 }
 
-create_weekly_trajectories <- function(cohort_rows, run_dir) {
+create_weekly_trajectories <- function(cohort_rows, run_dir, config) {
   facts <- define_state_intervals(cohort_rows)
   states <- c("AliveNoPneum", "AlivePneum", "DeathNoHistory", "DeathHistory")
   study <- Cohort2Trajectory::cohort2TrajectoryConfiguration(
@@ -152,7 +152,7 @@ create_weekly_trajectories <- function(cohort_rows, run_dir) {
     trajectoryDataObject = facts$intervals,
     stateCohortLabels = states, stateCohortPriorityOrder = rev(states),
     stateCohortAbsorbing = states[3:4], stateSelectionType = "Priority",
-    trajectoryType = "Discrete", lengthOfStay = 7L,
+    trajectoryType = "Discrete", cycleLength = config$economic$cycle_days,
     outOfCohortAllowed = FALSE, mergeStates = FALSE
   )
   Cohort2Trajectory::getDataForStudy(studyEnv = study)
