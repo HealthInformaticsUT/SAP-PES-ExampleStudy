@@ -9,16 +9,16 @@ install.packages(c("remotes", "CDMConnector", "CirceR", "SqlRender",
                    "dplyr", "dbplyr", "jsonlite", "survival", "zip"))
 
 remotes::install_github(
-  "HealthInformaticsUT/Cohort2Trajectory@30523a57ff5e7c67eba3883c375c5d1f921c4201",
+  "HealthInformaticsUT/Cohort2Trajectory@04e4a573c71fe1af919e20dc497dafb953851346",
   upgrade = "never"
 )
 remotes::install_github(
-  "HealthInformaticsUT/TrajectoryMarkovAnalysis@b24836f5ece7b88da09e7326040f3f36700db2a1",
+  "HealthInformaticsUT/TrajectoryMarkovAnalysis@21ca3daf104639ccfb901c145afb39867246255a",
   upgrade = "never"
 )
 ```
 
-These commits provide Cohort2Trajectory 1.3.0.9000 and TrajectoryMarkovAnalysis 1.1.0.9000, including the shared trajectory definitions and economic helpers used here. The installation commands pin both packages so later repository changes do not alter the code used for this study. Restart R after updating packages that were already loaded.
+These commits provide Cohort2Trajectory 1.3.0.9000 and TrajectoryMarkovAnalysis 1.1.0.9000, including `prepareStageObservations()` for the aligned trajectory views used here. Pinning both packages keeps later repository changes from altering the code used for this study. Restart R after updating packages that were already loaded.
 
 Connect to your OMOP database in R so that `cdm` is available with a writable results schema. Keep database credentials in your own connection setup, then run:
 
@@ -53,7 +53,9 @@ To follow the analysis, start with `R/run.R`. It reads in the same order as the 
 | `R/economics.R` | Calculates costs, QALYs, ICERs and economic sensitivities. |
 | `R/export.R` | Applies disclosure rules and writes tables and figure data. |
 
-C2T defines the clinical states and absorbing states once in `R/data.R`, using the seven-day cycle length from `assumptions.R`. The returned trajectories carry those definitions into TMA preparation and stage estimation. The onset-before-mortality order remains an explicit study rule. The primary projection defines weekly charges and utilities beside the transition model, using the same states and periods. `summarise_economic_outcomes()` then sets the programme cost and discount rates for each scenario through `updateRewardModel()`. `outcomeTotals()` reads discounted costs, life-years and QALYs without accessing the result object's internal tables.
+C2T creates two aligned views of the same cohort facts in `R/data.R`, using the seven-day cycle length from `assumptions.R`. The final view retains the four clinical states and absorbing death states used for costs and follow-up summaries. The history view uses the two living states with pneumonia priority, exposing pneumonia even when death has the final label in that week. Its target ends at the final view's last clinical interval, preserving the same weeks without adding post-death follow-up. Both views carry their definitions into TMA. `prepareStageObservations()` supplies onset followed by mortality within each cycle. A source cycle enters transition estimation only when the next cycle is observed or the current cycle ends in death; a final censored week remains excluded even if it spans seven days. Exact event dates remain available for Cox analyses and chronology sensitivities.
+
+The primary projection defines weekly charges and utilities beside the transition model, using the same states and periods. `summarise_economic_outcomes()` then sets the programme cost and discount rates for each scenario through `updateRewardModel()`. `outcomeTotals()` reads discounted costs, life-years and QALYs without accessing the result object's internal tables.
 
 `assumptions.R` holds the fixed model settings. `cohorts/` and `inputs/` hold the definitions and external inputs. There are no recovery scripts or developer tests. A failed run is restarted from the beginning.
 

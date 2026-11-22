@@ -1,44 +1,33 @@
 # Weekly stages, costs and deterministic projections for the study.
 
 build_weekly_analysis_rows <- function(patients, histories, config) {
-  weekly <- histories$data
-  baseline <- patients[match(weekly$subject_id, patients$subject_id), ]
-  start_day <- as.integer(weekly$state_start_date - baseline$index_date)
-  end_day <- as.integer(weekly$state_end_date - baseline$index_date)
-  if (any(start_day %% 7 != 0)) stop("Weekly histories must start on an I63-index weekly boundary.")
-  death <- !is.na(baseline$death_day) & baseline$death_day >= start_day & baseline$death_day <= end_day
-  prior_pneumonia <- !is.na(baseline$pneumonia_day) & baseline$pneumonia_day < start_day
-  onset <- !prior_pneumonia & !is.na(baseline$pneumonia_day) &
-    baseline$pneumonia_day >= start_day & baseline$pneumonia_day <= end_day &
-    (is.na(baseline$death_day) | baseline$pneumonia_day <= baseline$death_day)
-  mortality_state <- ifelse(prior_pneumonia | onset, "AlivePneum", "AliveNoPneum")
-  expected <- ifelse(death,
-    ifelse(mortality_state == "AlivePneum", "DeathHistory", "DeathNoHistory"), mortality_state)
-  if (any(expected != weekly$state_label) || any(!is.na(baseline$death_day) & baseline$death_day < start_day)) {
-    stop("Weekly labels disagree with the exact pneumonia/death dates.")
+  observations <- TrajectoryMarkovAnalysis::prepareStageObservations(histories,
+    entryState = "AliveNoPneum", requireNextCycle = TRUE)
+  onset <- observations[observations$stage == "onset", ]
+  mortality <- observations[observations$stage == "mortality", ]
+  if (!setequal(onset$subject_id, patients$subject_id)) {
+    stop("Weekly histories must cover the selected patients.")
   }
-  next_observed <- paste(weekly$subject_id, start_day + 7) %in% paste(weekly$subject_id, start_day)
-  data.frame(subject_id = weekly$subject_id, cycle = start_day / 7,
-    period = config$period_labels[findInterval(start_day, config$period_breaks)],
-    start_state = ifelse(prior_pneumonia, "AlivePneum", "AliveNoPneum"),
-    pneumonia_onset = onset, mortality_state = mortality_state,
-    death_in_cycle = death, complete_cycle = next_observed | death)
+  # Mortality starts at the history view's current-cycle label, which also
+  # preserves an onset in a censored final week whose destination is masked.
+  data.frame(subject_id = onset$subject_id,
+    cycle = onset$source_day / config$economic$cycle_days,
+    period = config$period_labels[findInterval(onset$source_day, config$period_breaks)],
+    start_state = onset$from_state,
+    pneumonia_onset = onset$from_state == "AliveNoPneum" & mortality$from_state == "AlivePneum",
+    mortality_state = mortality$from_state,
+    death_in_cycle = mortality$to_state %in% histories$mortality$absorbingStates,
+    complete_cycle = onset$observed, source_day = onset$source_day,
+    onset_to_state = onset$to_state, mortality_to_state = mortality$to_state,
+    stringsAsFactors = FALSE)
 }
 
-# Onset happens before mortality within the same week. A shortened censoring
-# week has no observed destination; a death supplies a complete destination.
-
+# Select the helper's stage observations from the compact patient-cycle table.
 stage_observations <- function(cycles, stages = c("onset", "mortality")) {
   rows <- lapply(stages, function(stage) {
     source <- if (stage == "onset") cycles$start_state else cycles$mortality_state
-    destination <- if (stage == "onset") {
-      ifelse(cycles$pneumonia_onset, "AlivePneum", cycles$start_state)
-    } else ifelse(cycles$death_in_cycle,
-      ifelse(cycles$mortality_state == "AlivePneum", "DeathHistory", "DeathNoHistory"),
-      cycles$mortality_state)
-    destination[!cycles$complete_cycle] <- NA_character_
-    data.frame(subject_id = cycles$subject_id, source_day = cycles$cycle * 7L,
-      stage = stage, from_state = source, to_state = destination,
+    data.frame(subject_id = cycles$subject_id, source_day = cycles$source_day,
+      stage = stage, from_state = source, to_state = cycles[[paste0(stage, "_to_state")]],
       observed = as.logical(cycles$complete_cycle), stringsAsFactors = FALSE)
   })
   do.call(rbind, rows)
@@ -48,7 +37,7 @@ estimate_transitions <- function(cycles, config, histories, stages = c("onset", 
                                  observations = NULL) {
   if (is.null(observations)) observations <- stage_observations(cycles, stages)
   TrajectoryMarkovAnalysis::estimateStageTransitions(observations,
-    stageOrder = stages, definition = histories,
+    stageOrder = stages, definition = histories$mortality,
     identityStates = if ("onset" %in% stages) list(onset = "AlivePneum") else list(),
     periodBreaks = config$period_breaks, periodLabels = config$period_labels)
 }
@@ -364,17 +353,19 @@ estimate_model_inputs <- function(c2t, patients, config, cost_data) {
     eligible_pneumonia = sum(!is.na(eligible$pneumonia_date)),
     eligible_same_day_pneumonia_deaths = sum(eligible$pneumonia_date == eligible$death_date, na.rm = TRUE)
   )
-  selected <- c2t$trajectories[c2t$trajectories$subject_id %in% eligible$subject_id, , drop = FALSE]
-  histories <- TrajectoryMarkovAnalysis::prepareTrajectories(selected)
-  states <- histories$states
-  if (histories$diagnostics$gap_count || histories$diagnostics$unresolved_intervals ||
-      length(histories$diagnostics$subjects_without_start) || length(histories$diagnostics$subjects_without_exit)) {
+  histories <- lapply(list(onset = c2t$history_trajectories, mortality = c2t$trajectories),
+    function(rows) TrajectoryMarkovAnalysis::prepareTrajectories(
+      rows[rows$subject_id %in% eligible$subject_id, , drop = FALSE]))
+  final_histories <- histories$mortality
+  states <- final_histories$states
+  if (final_histories$diagnostics$gap_count || final_histories$diagnostics$unresolved_intervals ||
+      length(final_histories$diagnostics$subjects_without_start) || length(final_histories$diagnostics$subjects_without_exit)) {
     stop("Resolve missing boundaries, gaps or unresolved intervals before the primary analysis.")
   }
   cycles <- build_weekly_analysis_rows(eligible, histories, config)
   onset <- estimate_pneumonia_onset(cycles, config, histories)
   mortality <- estimate_mortality(cycles, eligible, config$mortality$life_table_file, config, histories)
-  costs <- estimate_weekly_costs(histories, config, cost_data)
+  costs <- estimate_weekly_costs(final_histories, config, cost_data)
   schedule <- dplyr::left_join(onset$schedule, mortality$schedule, by = "cycle")
   rewards <- costs$rewards
   for (state in states[1:2]) {

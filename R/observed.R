@@ -364,12 +364,13 @@ summarise_observed_care <- function(c2t, patients, config, primary_result = NULL
                 "age", "gender_concept_id", "eligible")
   if (!all(required %in% names(patients)) || anyNA(patients$eligible) || anyDuplicated(patients$subject_id))
     stop("Observed reports need one valid baseline row per target patient and an eligibility flag.")
-  histories <- TrajectoryMarkovAnalysis::prepareTrajectories(c2t$trajectories)
+  histories <- lapply(list(onset = c2t$history_trajectories, mortality = c2t$trajectories),
+    TrajectoryMarkovAnalysis::prepareTrajectories)
   cycles <- build_weekly_analysis_rows(patients, histories, config)
   transitions <- summarise_transitions(cycles, patients, config, histories)
   validation <- validate_survival(patients, transitions, config, validation_replicates, seed)
   tables <- list(demographics = summarise_demographics(patients),
-    observed_population = summarise_followup(c2t, patients, histories),
+    observed_population = summarise_followup(c2t, patients, histories$mortality),
     transition_estimates = transitions,
     observed_occupancy = observed_state_occupancy(patients),
     fitted_occupancy = project_state_occupancy(transitions, config, patients),

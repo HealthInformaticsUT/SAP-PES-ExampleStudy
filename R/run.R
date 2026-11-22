@@ -8,6 +8,9 @@ run_study <- function(cdm, nihss = NULL, config) {
       utils::packageVersion("TrajectoryMarkovAnalysis") < "1.1.0.9000") {
     stop("This study requires Cohort2Trajectory >= 1.3.0.9000 and TrajectoryMarkovAnalysis >= 1.1.0.9000.")
   }
+  if (!"prepareStageObservations" %in% getNamespaceExports("TrajectoryMarkovAnalysis")) {
+    stop("Install the TrajectoryMarkovAnalysis revision listed in README.md, then restart R before running this study.")
+  }
   if (!inherits(cdm, "cdm_reference")) stop("Supply a connected CDMConnector cdm reference.")
   if (!identical(as.numeric(config$economic$cycle_days), 7)) {
     stop("This study's event rules and reporting periods require seven-day cycles.")

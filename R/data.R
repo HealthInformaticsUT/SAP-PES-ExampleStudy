@@ -146,22 +146,39 @@ define_state_intervals <- function(cohort_rows) {
 create_weekly_trajectories <- function(cohort_rows, run_dir, config) {
   facts <- define_state_intervals(cohort_rows)
   states <- c("AliveNoPneum", "AlivePneum", "DeathNoHistory", "DeathHistory")
-  study <- Cohort2Trajectory::cohort2TrajectoryConfiguration(
-    studyName = "c2t", pathToStudy = run_dir,
-    atlasTargetCohort = "0", useCDM = FALSE, runSavedStudy = FALSE,
-    trajectoryDataObject = facts$intervals,
-    stateCohortLabels = states, stateCohortPriorityOrder = rev(states),
-    stateCohortAbsorbing = states[3:4], stateSelectionType = "Priority",
-    trajectoryType = "Discrete", cycleLength = config$economic$cycle_days,
-    outOfCohortAllowed = FALSE, mergeStates = FALSE
-  )
-  Cohort2Trajectory::getDataForStudy(studyEnv = study)
-  trajectories <- Cohort2Trajectory::createTrajectories(studyEnv = study, useCDM = FALSE)
-  trajectories$subject_id <- as.character(trajectories$subject_id)
+  create_view <- function(intervals, name, states, absorbing_states) {
+    study <- Cohort2Trajectory::cohort2TrajectoryConfiguration(
+      studyName = name, pathToStudy = run_dir,
+      atlasTargetCohort = "0", useCDM = FALSE, runSavedStudy = FALSE,
+      trajectoryDataObject = intervals,
+      stateCohortLabels = states, stateCohortPriorityOrder = rev(states),
+      stateCohortAbsorbing = absorbing_states, stateSelectionType = "Priority",
+      trajectoryType = "Discrete", cycleLength = config$economic$cycle_days,
+      outOfCohortAllowed = FALSE, mergeStates = FALSE
+    )
+    Cohort2Trajectory::getDataForStudy(studyEnv = study)
+    rows <- Cohort2Trajectory::createTrajectories(studyEnv = study, useCDM = FALSE)
+    rows$subject_id <- as.character(rows$subject_id)
+    rows
+  }
+  trajectories <- create_view(facts$intervals, "c2t", states, states[3:4])
 
-  # Exact dates are retained because one weekly label cannot show an onset
-  # followed by death in the same week.
+  # The history view exposes pneumonia even when death wins the final label.
+  # Bound its target at the final view's last clinical interval so both views
+  # have the same cycles, including the terminal week and no post-death weeks.
+  clinical_end <- trajectories |>
+    dplyr::filter(.data$state_label %in% states) |>
+    dplyr::group_by(.data$subject_id) |>
+    dplyr::summarise(last_date = max(.data$state_end_date), .groups = "drop")
+  history_intervals <- facts$intervals[!facts$intervals$cohort_definition_id %in% states[3:4], ]
+  target <- history_intervals$cohort_definition_id == "0"
+  history_intervals$cohort_end_date[target] <- clinical_end$last_date[
+    match(history_intervals$subject_id[target], clinical_end$subject_id)]
+  history_trajectories <- create_view(history_intervals, "c2t_history", states[1:2], character())
+
+  # Exact dates remain available for the Cox analyses and chronology checks.
   list(trajectories = trajectories, source_intervals = facts$intervals,
+    history_trajectories = history_trajectories,
     eligibility_cohort = facts$eligibility, patients = facts$patients)
 }
 
